@@ -127,10 +127,17 @@ int main(void)
 
     std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
 
-    float positions[6] = {
-            -0.5f, -0.5,
-            0.0f, 0.5f,
-            0.5f, -0.5f
+    // Data
+    float positions[] = {
+            -0.5f, -0.5f,
+            0.5f, -0.5f,
+            0.5f, 0.5f,
+            -0.5f, 0.5f
+    };
+
+    unsigned int indices[] = {
+            0, 1, 2,
+            2, 3, 0
     };
 
     // buffer id é o "ponteiro" para a memória requisitada na GPU
@@ -143,7 +150,7 @@ int main(void)
     glBindBuffer(GL_ARRAY_BUFFER, buffer_id);
     // envia os dados para a gpu, especificando a quantidade e a maneira que esse dado será utilizado.
     // static é colocado uma vez e não é mais alterado
-    glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float), positions, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float), positions, GL_STATIC_DRAW);
 
     // especifica os atributos de cada vértice que serão utilizados pelo shader
     // índice do atributo, quantidade de elementos, se é normalizado, tipo do atributo, tamanho em bytes do atributo
@@ -151,6 +158,15 @@ int main(void)
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
     // Habilita um atributo, baseado no seu índice
     glEnableVertexAttribArray(0);
+
+    // Index buffer object
+    // Index buffer é uma lista de índices, onde cada elemento é um índice na lista de vértices. Essa lista é utilizada
+    // para reutilizar vértices já existentes para fazer formas mais complexas que triangulos. Criar esses índices funciona
+    // da mesma maneira que criar os vértices
+    unsigned int ibo;
+    glGenBuffers(1, &ibo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
 
     ShaderProgramSource src = ParseShader("../../../opengl_proj/res/shaders/basic.shader"); // caminho começa no .exe dentro de build/bin
     unsigned int shader = CreateShader(src.VertexSource, src.FragmentSource);
@@ -162,7 +178,11 @@ int main(void)
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glDrawArrays(GL_TRIANGLES, 0, 3); // desenha o estado atual do opengl, que nesse caso é o buffer (por causa do bind)
+        // desenha o estado atual do opengl, que nesse caso é o buffer (por causa do bind); tipo do draw, índice inicial, quantidade de vértices
+        //glDrawArrays(GL_TRIANGLES, 0, 3);
+        // desenha os elementos (index buffer); tipo do draw, quantidade de índices, tipo do índice, ponteiro para os índices. Como os índices
+        // atuais já estão "bind", não precisa ser passado
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
