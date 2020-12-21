@@ -152,7 +152,7 @@ int main(void)
     // Habilita um atributo, baseado no seu índice
     glEnableVertexAttribArray(0);
 
-    ShaderProgramSource src = ParseShader("../../../opengl_proj/res/shaders/basic.shader");
+    ShaderProgramSource src = ParseShader("../../../opengl_proj/res/shaders/basic.shader"); // caminho começa no .exe dentro de build/bin
     unsigned int shader = CreateShader(src.VertexSource, src.FragmentSource);
     glUseProgram(shader);
 
