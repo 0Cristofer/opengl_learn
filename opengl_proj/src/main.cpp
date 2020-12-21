@@ -144,6 +144,8 @@ int main(void)
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
+    glfwSwapInterval(1);
+
     if (glewInit() != GLEW_OK) //Glew init precisa ser chamado depois de criar o contexto
         return -1;
 
@@ -167,12 +169,12 @@ int main(void)
     // Cria o buffer e seta o id
     GLCall(glGenBuffers(1, &buffer_id));
     // seta o estado do opengl para utilizar o id criado e o tipo dessa memória (buffer array).
-    // dar bind significa que toda operação daqui pra frente utilizará esse id, ou seja, estamos "ativando" esse id
+    // dar bind significa que toda operação daqui pra frente utilizará esse id, ou seja, estamos "ativando", ou "vinculando" esse id
     // A partir daqui, a ordem dessas instruções não importa de verdade, pois estamos num estado definido
     GLCall(glBindBuffer(GL_ARRAY_BUFFER, buffer_id));
     // envia os dados para a gpu, especificando a quantidade e a maneira que esse dado será utilizado.
     // static é colocado uma vez e não é mais alterado
-    GLCall(glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float), positions, GL_STATIC_DRAW));
+    GLCall(glBufferData(GL_ARRAY_BUFFER, 4 * 2 * sizeof(float), positions, GL_STATIC_DRAW));
 
     // especifica os atributos de cada vértice que serão utilizados pelo shader
     // índice do atributo, quantidade de elementos, se é normalizado, tipo do atributo, tamanho em bytes do atributo
@@ -194,6 +196,13 @@ int main(void)
     unsigned int shader = CreateShader(src.VertexSource, src.FragmentSource);
     GLCall(glUseProgram(shader));
 
+    // Configura um uniform
+    GLCall(int location = glGetUniformLocation(shader, "u_Color"));
+    ASSERT(location != -1);
+    GLCall(glUniform4f(location, 0.8f, 0.3f, 0.8f, 1.0f));
+
+    float r = 0.0f;
+    float increment = 0.05;
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
@@ -202,9 +211,18 @@ int main(void)
 
         // desenha o estado atual do opengl, que nesse caso é o buffer (por causa do bind); tipo do draw, índice inicial, quantidade de vértices
         //GLCall(glDrawArrays(GL_TRIANGLES, 0, 3));
+        // Uniforms são passados por draw call e são aplicados ao draw call inteiro
+        GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
         // desenha os elementos (index buffer); tipo do draw, quantidade de índices, tipo do índice, ponteiro para os índices. Como os índices
-        // atuais já estão "bind", não precisa ser passado
+        // atuais já estão vinculados, não precisa ser passado
         GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
+
+        if (r > 1.0f)
+            increment = -0.05f;
+        else if (r < 0.0f)
+            increment = 0.05;
+
+        r += increment;
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
