@@ -168,7 +168,7 @@ int main()
             2, 3, 0
     };
 
-    // VAO é vertex array buffer e ele armazena as informações de layout (vertex attributes) do vertex buffer
+    // VAO é vertex array object e ele armazena as informações de layout (vertex attributes) do vertex buffer
     // e as informações dos índices (ibo) assim, só precisamos vincular (bind) o VAO quando fazer o draw call
     unsigned int vao;
     // Cria um VAO
