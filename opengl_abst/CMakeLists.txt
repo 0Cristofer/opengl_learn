@@ -3,7 +3,7 @@ project(opengl_abst)
 
 find_package(OpenGL REQUIRED)
 
-add_executable(opengl_abst src/main.cpp src/Renderer.cpp src/Renderer.hpp src/VertexBuffer.cpp src/VertexBuffer.hpp)
+add_executable(opengl_abst src/main.cpp src/Renderer.cpp src/Renderer.hpp src/VertexBuffer.cpp src/VertexBuffer.hpp src/IndexBuffer.cpp src/IndexBuffer.hpp)
 
 target_compile_definitions(opengl_abst PRIVATE GLEW_STATIC)
 target_include_directories(opengl_abst PRIVATE ${GLEW_DIRECTORY}/include)

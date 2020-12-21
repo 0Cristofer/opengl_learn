@@ -10,27 +10,9 @@
 #include <string>
 #include <sstream>
 
-#define ASSERT(x) if (!(x)) __debugbreak()
-#define GLCall(glFunc) GLClearError();\
-glFunc;\
-ASSERT(GLLogCall(#glFunc, __FILE__, __LINE__))
-
-static void GLClearError()
-{
-    while (glGetError() != GL_NO_ERROR); // get error retorna um código de erro até não haver mais erros armazenados
-}
-
-static bool GLLogCall(const char* function, const char* file, int line)
-{
-    while (GLenum error = glGetError())
-    {
-        std::cout << "[OpenGL Error] (" << error << "): " << function << " " << file << ":" << line << std::endl;
-
-        return false;
-    }
-
-    return true;
-}
+#include "Renderer.hpp"
+#include "VertexBuffer.hpp"
+#include "IndexBuffer.hpp"
 
 struct ShaderProgramSource
 {
@@ -160,110 +142,96 @@ int main()
 
     std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
 
-    // Data
-    float positions[] = {
-            -0.5f, -0.5f,
-            0.5f, -0.5f,
-            0.5f, 0.5f,
-            -0.5f, 0.5f
-    };
-
-    unsigned int indices[] = {
-            0, 1, 2,
-            2, 3, 0
-    };
-
-    // VAO é vertex array object e ele armazena as informações de layout (vertex attributes) do vertex buffer
-    // e as informações dos índices (ibo) assim, só precisamos vincular (bind) o VAO quando fazer o draw call
-    unsigned int vao;
-    // Cria um VAO
-    GLCall(glGenVertexArrays(1, &vao));
-    // Vincula esse VAO
-    GLCall(glBindVertexArray(vao));
-
-    // buffer id é o "ponteiro" para a memória requisitada na GPU
-    unsigned int buffer_id;
-    // Cria o buffer e seta o id
-    GLCall(glGenBuffers(1, &buffer_id));
-    // seta o estado do opengl para utilizar o id criado e o tipo dessa memória (buffer array).
-    // dar bind significa que toda operação daqui pra frente utilizará esse id, ou seja, estamos "ativando", ou "vinculando" esse id
-    // A partir daqui, a ordem dessas instruções não importa de verdade, pois estamos num estado definido
-    GLCall(glBindBuffer(GL_ARRAY_BUFFER, buffer_id));
-    // envia os dados para a gpu, especificando a quantidade e a maneira que esse dado será utilizado.
-    // static é colocado uma vez e não é mais alterado
-    GLCall(glBufferData(GL_ARRAY_BUFFER, 4 * 2 * sizeof(float), positions, GL_STATIC_DRAW));
-
-    // Habilita um atributo, baseado no seu índice no VAO
-    GLCall(glEnableVertexAttribArray(0));
-    // especifica os atributos de cada vértice que serão utilizados pelo shader
-    // índice do atributo no VAO, quantidade de elementos, se é normalizado, tipo do atributo, tamanho em bytes do atributo
-    // tamanho em bytes de cada vértice, distância em bytes para chegar neste atributo a partir do começo do vertice
-    // é também nesse momento que o VAO é ligado ao array buffer atual
-    GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0));
-
-    // Index buffer object
-    // Index buffer é uma lista de índices, onde cada elemento é um índice na lista de vértices. Essa lista é utilizada
-    // para reutilizar vértices já existentes para fazer formas mais complexas que triangulos. Criar esses índices funciona
-    // da mesma maneira que criar os vértices
-    unsigned int ibo;
-    GLCall(glGenBuffers(1, &ibo));
-    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
-    GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW));
-
-    ShaderProgramSource src = ParseShader("../../../opengl_basic/res/shaders/basic.shader"); // caminho começa no .exe dentro de build/bin
-    unsigned int shader = CreateShader(src.VertexSource, src.FragmentSource);
-    GLCall(glUseProgram(shader));
-
-    // Configura um uniform, passando o shader que será utilizado e o nome do uniform dentro do shader
-    GLCall(int location = glGetUniformLocation(shader, "u_Color"));
-    ASSERT(location != -1);
-    GLCall(glUniform4f(location, 0.8f, 0.3f, 0.8f, 1.0f));
-
-    // Limpa os estados
-    GLCall(glBindVertexArray(0));
-    GLCall(glUseProgram(0));
-    GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
-    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-
-    float r = 0.0f;
-    float increment = 0.05;
-    /* Loop until the user closes the window */
-    while (!glfwWindowShouldClose(window))
     {
-        /* Render here */
-        GLCall(glClear(GL_COLOR_BUFFER_BIT));
+        // Data
+        float positions[] = {
+                -0.5f, -0.5f,
+                0.5f, -0.5f,
+                0.5f, 0.5f,
+                -0.5f, 0.5f
+        };
 
-        // Início da configuração da geometria que será desenhada nesse frame. todos os binds são aplicados ao draw call atual
+        unsigned int indices[] = {
+                0, 1, 2,
+                2, 3, 0
+        };
 
-        // Ativa o shader
-        GLCall(glUseProgram(shader));
-        // Uniforms são passados por draw call e são aplicados ao draw call inteiro
-        GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
-
-        // Ativa o VAO
+        // VAO é vertex array object e ele armazena as informações de layout (vertex attributes) do vertex buffer
+        // e as informações dos índices (ibo) assim, só precisamos vincular (bind) o VAO quando fazer o draw call
+        unsigned int vao;
+        // Cria um VAO
+        GLCall(glGenVertexArrays(1, &vao));
+        // Vincula esse VAO
         GLCall(glBindVertexArray(vao));
 
-        // desenha os elementos (index buffer); tipo do draw, quantidade de índices, tipo do índice, ponteiro para os índices. Como os índices
-        // atuais já estão vinculados, não precisa ser passado
-        GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
+        VertexBuffer vb(positions, 4 * 2 * sizeof(float));
 
-        if (r > 1.0f)
-            increment = -0.05f;
-        else if (r < 0.0f)
-            increment = 0.05;
+        // Habilita um atributo, baseado no seu índice no VAO
+        GLCall(glEnableVertexAttribArray(0));
+        // especifica os atributos de cada vértice que serão utilizados pelo shader
+        // índice do atributo no VAO, quantidade de elementos, se é normalizado, tipo do atributo, tamanho em bytes do atributo
+        // tamanho em bytes de cada vértice, distância em bytes para chegar neste atributo a partir do começo do vertice
+        // é também nesse momento que o VAO é ligado ao array buffer atual
+        GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0));
 
-        r += increment;
+        IndexBuffer ib(indices, 6);
 
-        // Fim
+        ShaderProgramSource src = ParseShader(
+                "../../../opengl_basic/res/shaders/basic.shader"); // caminho começa no .exe dentro de build/bin
+        unsigned int shader = CreateShader(src.VertexSource, src.FragmentSource);
+        GLCall(glUseProgram(shader));
 
-        /* Swap front and back buffers */
-        glfwSwapBuffers(window);
+        // Configura um uniform, passando o shader que será utilizado e o nome do uniform dentro do shader
+        GLCall(int location = glGetUniformLocation(shader, "u_Color"));
+        ASSERT(location != -1);
+        GLCall(glUniform4f(location, 0.8f, 0.3f, 0.8f, 1.0f));
 
-        /* Poll for and process events */
-        glfwPollEvents();
+        // Limpa os estados
+        GLCall(glBindVertexArray(0));
+        GLCall(glUseProgram(0));
+        GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
+        GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+        float r = 0.0f;
+        float increment = 0.05;
+        /* Loop until the user closes the window */
+        while (!glfwWindowShouldClose(window)) {
+            /* Render here */
+            GLCall(glClear(GL_COLOR_BUFFER_BIT));
+
+            // Início da configuração da geometria que será desenhada nesse frame. todos os binds são aplicados ao draw call atual
+
+            // Ativa o shader
+            GLCall(glUseProgram(shader));
+            // Uniforms são passados por draw call e são aplicados ao draw call inteiro
+            GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
+
+            // Ativa o VAO
+            GLCall(glBindVertexArray(vao));
+            ib.Bind();
+
+            // desenha os elementos (index buffer); tipo do draw, quantidade de índices, tipo do índice, ponteiro para os índices. Como os índices
+            // atuais já estão vinculados, não precisa ser passado
+            GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
+
+            if (r > 1.0f)
+                increment = -0.05f;
+            else if (r < 0.0f)
+                increment = 0.05;
+
+            r += increment;
+
+            // Fim
+
+            /* Swap front and back buffers */
+            glfwSwapBuffers(window);
+
+            /* Poll for and process events */
+            glfwPollEvents();
+        }
+
+        GLCall(glDeleteProgram(shader));
     }
-
-    GLCall(glDeleteProgram(shader));
 
     glfwTerminate();
     return 0;
