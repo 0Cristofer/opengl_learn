@@ -1,3 +1,7 @@
+//
+// Created by crist on 19/12/2020.
+//
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
@@ -148,6 +152,7 @@ int main()
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
+    // Ativa VSync
     glfwSwapInterval(1);
 
     if (glewInit() != GLEW_OK) //Glew init precisa ser chamado depois de criar o contexto
@@ -205,7 +210,7 @@ int main()
     GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
     GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW));
 
-    ShaderProgramSource src = ParseShader("../../../opengl_proj/res/shaders/basic.shader"); // caminho começa no .exe dentro de build/bin
+    ShaderProgramSource src = ParseShader("../../../opengl_basic/res/shaders/basic.shader"); // caminho começa no .exe dentro de build/bin
     unsigned int shader = CreateShader(src.VertexSource, src.FragmentSource);
     GLCall(glUseProgram(shader));
 

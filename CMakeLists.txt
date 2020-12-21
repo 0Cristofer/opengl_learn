@@ -10,4 +10,4 @@ set(DEPS_DIRECTORY ${CMAKE_SOURCE_DIR}/deps)
 set(GLEW_DIRECTORY ${DEPS_DIRECTORY}/GLEW)
 set(GLFW_DIRECTORY ${DEPS_DIRECTORY}/GLFW)
 
-add_subdirectory(opengl_proj)
+add_subdirectory(opengl_basic)

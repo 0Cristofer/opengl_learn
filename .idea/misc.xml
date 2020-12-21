@@ -3,7 +3,7 @@
   <component name="CMakeWorkspace" PROJECT_DIR="$PROJECT_DIR$" />
   <component name="CidrRootsConfiguration">
     <sourceRoots>
-      <file path="$PROJECT_DIR$/opengl_proj/src" />
+      <file path="$PROJECT_DIR$/opengl_basic/src" />
     </sourceRoots>
   </component>
 </project>
