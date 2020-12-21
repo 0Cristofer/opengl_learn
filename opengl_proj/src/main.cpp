@@ -124,7 +124,7 @@ static unsigned int CreateShader(const std::string& vertexShader, const std::str
     return program;
 }
 
-int main(void)
+int main()
 {
     GLFWwindow* window;
 
@@ -132,6 +132,10 @@ int main(void)
     if (!glfwInit()) {
         return -1;
     }
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     /* Create a windowed mode window and its OpenGL context */
     window = glfwCreateWindow(1080, 720, "Hello World", NULL, NULL);
@@ -164,6 +168,14 @@ int main(void)
             2, 3, 0
     };
 
+    // VAO é vertex array buffer e ele armazena as informações de layout (vertex attributes) do vertex buffer
+    // e as informações dos índices (ibo) assim, só precisamos vincular (bind) o VAO quando fazer o draw call
+    unsigned int vao;
+    // Cria um VAO
+    GLCall(glGenVertexArrays(1, &vao));
+    // Vincula esse VAO
+    GLCall(glBindVertexArray(vao));
+
     // buffer id é o "ponteiro" para a memória requisitada na GPU
     unsigned int buffer_id;
     // Cria o buffer e seta o id
@@ -176,12 +188,13 @@ int main(void)
     // static é colocado uma vez e não é mais alterado
     GLCall(glBufferData(GL_ARRAY_BUFFER, 4 * 2 * sizeof(float), positions, GL_STATIC_DRAW));
 
-    // especifica os atributos de cada vértice que serão utilizados pelo shader
-    // índice do atributo, quantidade de elementos, se é normalizado, tipo do atributo, tamanho em bytes do atributo
-    // tamanho em bytes de cada vértice, distância em bytes para chegar neste atributo a partir do começo do vertice
-    GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0));
-    // Habilita um atributo, baseado no seu índice
+    // Habilita um atributo, baseado no seu índice no VAO
     GLCall(glEnableVertexAttribArray(0));
+    // especifica os atributos de cada vértice que serão utilizados pelo shader
+    // índice do atributo no VAO, quantidade de elementos, se é normalizado, tipo do atributo, tamanho em bytes do atributo
+    // tamanho em bytes de cada vértice, distância em bytes para chegar neste atributo a partir do começo do vertice
+    // é também nesse momento que o VAO é ligado ao array buffer atual
+    GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0));
 
     // Index buffer object
     // Index buffer é uma lista de índices, onde cada elemento é um índice na lista de vértices. Essa lista é utilizada
@@ -196,10 +209,16 @@ int main(void)
     unsigned int shader = CreateShader(src.VertexSource, src.FragmentSource);
     GLCall(glUseProgram(shader));
 
-    // Configura um uniform
+    // Configura um uniform, passando o shader que será utilizado e o nome do uniform dentro do shader
     GLCall(int location = glGetUniformLocation(shader, "u_Color"));
     ASSERT(location != -1);
     GLCall(glUniform4f(location, 0.8f, 0.3f, 0.8f, 1.0f));
+
+    // Limpa os estados
+    GLCall(glBindVertexArray(0));
+    GLCall(glUseProgram(0));
+    GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
     float r = 0.0f;
     float increment = 0.05;
@@ -209,10 +228,16 @@ int main(void)
         /* Render here */
         GLCall(glClear(GL_COLOR_BUFFER_BIT));
 
-        // desenha o estado atual do opengl, que nesse caso é o buffer (por causa do bind); tipo do draw, índice inicial, quantidade de vértices
-        //GLCall(glDrawArrays(GL_TRIANGLES, 0, 3));
+        // Início da configuração da geometria que será desenhada nesse frame. todos os binds são aplicados ao draw call atual
+
+        // Ativa o shader
+        GLCall(glUseProgram(shader));
         // Uniforms são passados por draw call e são aplicados ao draw call inteiro
         GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
+
+        // Ativa o VAO
+        GLCall(glBindVertexArray(vao));
+
         // desenha os elementos (index buffer); tipo do draw, quantidade de índices, tipo do índice, ponteiro para os índices. Como os índices
         // atuais já estão vinculados, não precisa ser passado
         GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
@@ -223,6 +248,8 @@ int main(void)
             increment = 0.05;
 
         r += increment;
+
+        // Fim
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
