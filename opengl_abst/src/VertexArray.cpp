@@ -5,16 +5,17 @@
 #include "VertexArray.hpp"
 
 VertexArray::VertexArray()
+    : m_RendererID(0)
 {
-    GLCall(glGenVertexArrays(1, &m_RendererId));
+    GLCall(glGenVertexArrays(1, &m_RendererID));
 }
 
 VertexArray::~VertexArray()
 {
-    GLCall(glDeleteVertexArrays(1, &m_RendererId));
+    GLCall(glDeleteVertexArrays(1, &m_RendererID));
 }
 
-void VertexArray::AddBuffer(const VertexBuffer &vb, const VertexBufferLayout &layout)
+void VertexArray::AddBuffer(const VertexBuffer &vb, const VertexBufferLayout &layout) const
 {
     Bind();
     vb.Bind();
@@ -35,7 +36,7 @@ void VertexArray::AddBuffer(const VertexBuffer &vb, const VertexBufferLayout &la
 
 void VertexArray::Bind() const
 {
-    GLCall(glBindVertexArray(m_RendererId));
+    GLCall(glBindVertexArray(m_RendererID));
 }
 
 void VertexArray::Unbind() const

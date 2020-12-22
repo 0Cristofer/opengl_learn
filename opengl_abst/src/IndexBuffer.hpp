@@ -5,7 +5,6 @@
 #ifndef OPENGL_LEARN_INDEXBUFFER_HPP
 #define OPENGL_LEARN_INDEXBUFFER_HPP
 
-
 class IndexBuffer
 {
 private:
@@ -20,6 +19,5 @@ public:
 
     inline unsigned int GetCount() const { return m_Count; }
 };
-
 
 #endif //OPENGL_LEARN_INDEXBUFFER_HPP

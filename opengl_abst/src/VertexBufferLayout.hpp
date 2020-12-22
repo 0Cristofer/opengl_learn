@@ -70,5 +70,4 @@ public:
     inline unsigned int GetStride() const { return m_Stride; }
 };
 
-
 #endif //OPENGL_LEARN_VERTEXBUFFERLAYOUT_HPP

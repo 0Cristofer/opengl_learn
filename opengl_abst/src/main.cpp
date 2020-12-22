@@ -6,110 +6,12 @@
 #include <GLFW/glfw3.h>
 
 #include <iostream>
-#include <fstream>
-#include <string>
-#include <sstream>
 
 #include "Renderer.hpp"
 #include "VertexBuffer.hpp"
 #include "IndexBuffer.hpp"
 #include "VertexArray.hpp"
-
-struct ShaderProgramSource
-{
-    std::string VertexSource;
-    std::string FragmentSource;
-};
-
-
-static ShaderProgramSource ParseShader(const std::string& filePath)
-{
-    std::ifstream stream(filePath);
-
-    enum class ShaderType
-    {
-        NONE = -1, VERTEX = 0, FRAGMENT = 1
-    };
-
-    std::string line;
-    std::stringstream ss[2];
-    ShaderType shaderType = ShaderType::NONE;
-    while (std::getline(stream, line))
-    {
-        if (line.find("shader") != std::string::npos)
-        {
-            if (line.find("vertex") != std::string::npos)
-            {
-                shaderType = ShaderType::VERTEX;
-            }
-            else if (line.find("fragment") != std::string::npos)
-            {
-                shaderType = ShaderType::FRAGMENT;
-            }
-        }
-        else
-        {
-            ss[(int)shaderType] << line << '\n';
-        }
-    }
-
-    return {ss[0].str(), ss[1].str()};
-}
-
-// Compila um único shader genérico
-static unsigned int CompileShader(unsigned int type, const std::string& source)
-{
-    GLCall(unsigned int id = glCreateShader(type));
-    const char* src = source.c_str();
-
-    GLCall(glShaderSource(id, 1, &src, nullptr));
-    GLCall(glCompileShader(id));
-
-    int result;
-    GLCall(glGetShaderiv(id, GL_COMPILE_STATUS, &result));
-
-    if (result == GL_FALSE)
-    {
-        int length;
-        char* message;
-
-        GLCall(glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length));
-        message = new char[length];
-        GLCall(glGetShaderInfoLog(id, length, &length, message));
-
-        const char* shaderTypeName = type == GL_VERTEX_SHADER ? "Vertex shader" : "Fragment shader";
-        std::cout << "Failed to compile "<< shaderTypeName << ": " << message << std::endl;
-
-        GLCall(glDeleteShader(id));
-        delete message;
-        return 0;
-    }
-
-    return id;
-}
-
-/**
- * Compila os dois shaders e linka eles em um único programa. Esse processo é feito pelo opengl
- * @param vertexShader String contendo o código cru do shader
- * @param fragmentShader
- * @return
- */
-static unsigned int CreateShader(const std::string& vertexShader, const std::string& fragmentShader)
-{
-    GLCall(unsigned int program = glCreateProgram());
-    unsigned int vs = CompileShader(GL_VERTEX_SHADER, vertexShader);
-    unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShader);
-
-    GLCall(glAttachShader(program, vs));
-    GLCall(glAttachShader(program, fs));
-    GLCall(glLinkProgram(program));
-    GLCall(glValidateProgram(program));
-
-    GLCall(glDeleteShader(vs));
-    GLCall(glDeleteShader(fs));
-
-    return program;
-}
+#include "Shader.hpp"
 
 int main()
 {
@@ -125,7 +27,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(1080, 720, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(1080, 720, "Hello World", nullptr, nullptr);
     if (!window)
     {
         glfwTerminate();
@@ -166,21 +68,15 @@ int main()
 
         IndexBuffer ib(indices, 6);
 
-        ShaderProgramSource src = ParseShader(
-                "../../../opengl_basic/res/shaders/basic.shader"); // caminho começa no .exe dentro de build/bin
-        unsigned int shader = CreateShader(src.VertexSource, src.FragmentSource);
-        GLCall(glUseProgram(shader));
-
-        // Configura um uniform, passando o shader que será utilizado e o nome do uniform dentro do shader
-        GLCall(int location = glGetUniformLocation(shader, "u_Color"));
-        ASSERT(location != -1);
-        GLCall(glUniform4f(location, 0.8f, 0.3f, 0.8f, 1.0f));
+        Shader shader("../../../opengl_basic/res/shaders/basic.shader");
+        shader.Bind();
+        shader.SetUniform4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
 
         // Limpa os estados
         va.Unbind();
-        GLCall(glUseProgram(0));
-        GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
-        GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+        shader.Unbind();
+        vb.Unbind();
+        ib.Unbind();
 
         float r = 0.0f;
         float increment = 0.05;
@@ -191,11 +87,8 @@ int main()
 
             // Início da configuração da geometria que será desenhada nesse frame. todos os binds são aplicados ao draw call atual
 
-            // Ativa o shader
-            GLCall(glUseProgram(shader));
-            // Uniforms são passados por draw call e são aplicados ao draw call inteiro
-            GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
-
+            shader.Bind();
+            shader.SetUniform4f("u_Color", r, 0.3f, 0.8f, 1.0f);
             va.Bind();
 
             // desenha os elementos (index buffer); tipo do draw, quantidade de índices, tipo do índice, ponteiro para os índices. Como os índices
@@ -217,8 +110,6 @@ int main()
             /* Poll for and process events */
             glfwPollEvents();
         }
-
-        GLCall(glDeleteProgram(shader));
     }
 
     glfwTerminate();
