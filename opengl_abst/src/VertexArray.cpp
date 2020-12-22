@@ -3,6 +3,7 @@
 //
 
 #include "VertexArray.hpp"
+#include "VertexBufferLayout.hpp"
 
 VertexArray::VertexArray()
     : m_RendererID(0)

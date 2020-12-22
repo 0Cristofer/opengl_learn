@@ -2,16 +2,27 @@
 // Created by crist on 21/12/2020.
 //
 
-#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 #include <iostream>
 
 #include "Renderer.hpp"
-#include "VertexBuffer.hpp"
-#include "IndexBuffer.hpp"
-#include "VertexArray.hpp"
-#include "Shader.hpp"
+#include "VertexBufferLayout.hpp"
+
+float UpdateColor()
+{
+    static float r = 0.0f;
+    static float increment = 0.05;
+
+    if (r > 1.0f)
+        increment = -0.05f;
+    else if (r < 0.0f)
+        increment = 0.05;
+
+    r += increment;
+
+    return r;
+}
 
 int main()
 {
@@ -40,7 +51,7 @@ int main()
     // Ativa VSync
     glfwSwapInterval(1);
 
-    if (glewInit() != GLEW_OK) //Glew init precisa ser chamado depois de criar o contexto
+    if (glewInit() != GLEW_OK) // Glew init precisa ser chamado depois de criar o contexto
         return -1;
 
     std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
@@ -78,29 +89,18 @@ int main()
         vb.Unbind();
         ib.Unbind();
 
-        float r = 0.0f;
-        float increment = 0.05;
+        Renderer renderer;
+
         /* Loop until the user closes the window */
         while (!glfwWindowShouldClose(window)) {
-            /* Render here */
-            GLCall(glClear(GL_COLOR_BUFFER_BIT));
+            renderer.Clear();
 
             // Início da configuração da geometria que será desenhada nesse frame. todos os binds são aplicados ao draw call atual
 
             shader.Bind();
-            shader.SetUniform4f("u_Color", r, 0.3f, 0.8f, 1.0f);
-            va.Bind();
+            shader.SetUniform4f("u_Color", UpdateColor(), 0.3f, 0.8f, 1.0f);
 
-            // desenha os elementos (index buffer); tipo do draw, quantidade de índices, tipo do índice, ponteiro para os índices. Como os índices
-            // atuais já estão vinculados, não precisa ser passado
-            GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
-
-            if (r > 1.0f)
-                increment = -0.05f;
-            else if (r < 0.0f)
-                increment = 0.05;
-
-            r += increment;
+            renderer.Draw(va, ib, shader);
 
             // Fim
 
