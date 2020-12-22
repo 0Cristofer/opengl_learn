@@ -13,6 +13,7 @@
 #include "Renderer.hpp"
 #include "VertexBuffer.hpp"
 #include "IndexBuffer.hpp"
+#include "VertexArray.hpp"
 
 struct ShaderProgramSource
 {
@@ -156,23 +157,12 @@ int main()
                 2, 3, 0
         };
 
-        // VAO é vertex array object e ele armazena as informações de layout (vertex attributes) do vertex buffer
-        // e as informações dos índices (ibo) assim, só precisamos vincular (bind) o VAO quando fazer o draw call
-        unsigned int vao;
-        // Cria um VAO
-        GLCall(glGenVertexArrays(1, &vao));
-        // Vincula esse VAO
-        GLCall(glBindVertexArray(vao));
-
+        VertexArray va;
         VertexBuffer vb(positions, 4 * 2 * sizeof(float));
+        VertexBufferLayout layout;
 
-        // Habilita um atributo, baseado no seu índice no VAO
-        GLCall(glEnableVertexAttribArray(0));
-        // especifica os atributos de cada vértice que serão utilizados pelo shader
-        // índice do atributo no VAO, quantidade de elementos, se é normalizado, tipo do atributo, tamanho em bytes do atributo
-        // tamanho em bytes de cada vértice, distância em bytes para chegar neste atributo a partir do começo do vertice
-        // é também nesse momento que o VAO é ligado ao array buffer atual
-        GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0));
+        layout.Push<float>(2);
+        va.AddBuffer(vb, layout);
 
         IndexBuffer ib(indices, 6);
 
@@ -187,7 +177,7 @@ int main()
         GLCall(glUniform4f(location, 0.8f, 0.3f, 0.8f, 1.0f));
 
         // Limpa os estados
-        GLCall(glBindVertexArray(0));
+        va.Unbind();
         GLCall(glUseProgram(0));
         GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
         GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
@@ -206,9 +196,7 @@ int main()
             // Uniforms são passados por draw call e são aplicados ao draw call inteiro
             GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
 
-            // Ativa o VAO
-            GLCall(glBindVertexArray(vao));
-            ib.Bind();
+            va.Bind();
 
             // desenha os elementos (index buffer); tipo do draw, quantidade de índices, tipo do índice, ponteiro para os índices. Como os índices
             // atuais já estão vinculados, não precisa ser passado
