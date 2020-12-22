@@ -2,12 +2,14 @@
 // Created by crist on 21/12/2020.
 //
 
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 #include <iostream>
 
 #include "Renderer.hpp"
 #include "VertexBufferLayout.hpp"
+#include "Texture.hpp"
 
 float UpdateColor()
 {
@@ -54,15 +56,18 @@ int main()
     if (glewInit() != GLEW_OK) // Glew init precisa ser chamado depois de criar o contexto
         return -1;
 
+    GLCall(glEnable(GL_BLEND));
+    GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+
     std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
 
     {
         // Data
         float positions[] = {
-                -0.5f, -0.5f,
-                0.5f, -0.5f,
-                0.5f, 0.5f,
-                -0.5f, 0.5f
+                -0.5f, -0.5f, 0.0f, 0.0f,
+                0.5f, -0.5f, 1.0f, 0.0f,
+                0.5f, 0.5f, 1.0f, 1.0f,
+                -0.5f, 0.5f, 0.0f, 1.0f
         };
 
         unsigned int indices[] = {
@@ -71,9 +76,10 @@ int main()
         };
 
         VertexArray va;
-        VertexBuffer vb(positions, 4 * 2 * sizeof(float));
+        VertexBuffer vb(positions, 4 * 4 * sizeof(float));
         VertexBufferLayout layout;
 
+        layout.Push<float>(2);
         layout.Push<float>(2);
         va.AddBuffer(vb, layout);
 
@@ -82,6 +88,10 @@ int main()
         Shader shader("../../../opengl_basic/res/shaders/basic.shader");
         shader.Bind();
         shader.SetUniform4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
+
+        Texture texture("../../../opengl_basic/res/textures/money.png");
+        texture.Bind();
+        shader.SetUniform1i("u_Texture", 0);
 
         // Limpa os estados
         va.Unbind();
