@@ -10,6 +10,7 @@
 #include "Renderer.hpp"
 #include "VertexBufferLayout.hpp"
 #include "Texture.hpp"
+#include "vendor/glm/gtc/matrix_transform.hpp"
 
 float UpdateColor()
 {
@@ -85,11 +86,14 @@ int main()
 
         IndexBuffer ib(indices, 6);
 
+        glm::mat4 proj = glm::ortho(-4.0f, 4.0f, -2.25f, 2.25f, -1.0f, 1.0f);
+
         Shader shader("../../../opengl_basic/res/shaders/basic.shader");
         shader.Bind();
         shader.SetUniform4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
+        shader.SetUniformMat4f("u_MVP", proj);
 
-        Texture texture("../../../opengl_basic/res/textures/money.png");
+        Texture texture("../../../opengl_basic/res/textures/brick.png");
         texture.Bind();
         shader.SetUniform1i("u_Texture", 0);
 
