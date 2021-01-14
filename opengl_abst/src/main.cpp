@@ -7,10 +7,14 @@
 
 #include <iostream>
 
+#include "vendor/glm/gtc/matrix_transform.hpp"
+#include "vendor/imgui/imgui.h"
+#include "vendor/imgui/imgui_impl_glfw.h"
+#include "vendor/imgui/imgui_impl_opengl3.h"
+
 #include "Renderer.hpp"
 #include "VertexBufferLayout.hpp"
 #include "Texture.hpp"
-#include "vendor/glm/gtc/matrix_transform.hpp"
 
 float UpdateColor()
 {
@@ -65,10 +69,10 @@ int main()
     {
         // Data
         float positions[] = {
-                -0.5f, -0.5f, 0.0f, 0.0f,
-                0.5f, -0.5f, 1.0f, 0.0f,
-                0.5f, 0.5f, 1.0f, 1.0f,
-                -0.5f, 0.5f, 0.0f, 1.0f
+                0.0f, 0.0f, 0.0f, 0.0f,
+                160.0f, 0.0f, 1.0f, 0.0f,
+                160.0f, 160.0f, 1.0f, 1.0f,
+                0.0f, 160.0f, 0.0f, 1.0f
         };
 
         unsigned int indices[] = {
@@ -86,12 +90,13 @@ int main()
 
         IndexBuffer ib(indices, 6);
 
-        glm::mat4 proj = glm::ortho(-4.0f, 4.0f, -2.25f, 2.25f, -1.0f, 1.0f);
+        glm::mat4 proj = glm::ortho(0.0f, 1080.0f, 0.0f, 720.0f, -1.0f, 1.0f);
+        glm::mat4 initial_view_pos = glm::mat4(1.0f);
+        glm::mat4 initial_model_pos = glm::mat4(1.0f);
 
         Shader shader("../../../opengl_basic/res/shaders/basic.shader");
         shader.Bind();
         shader.SetUniform4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
-        shader.SetUniformMat4f("u_MVP", proj);
 
         Texture texture("../../../opengl_basic/res/textures/brick.png");
         texture.Bind();
@@ -105,27 +110,56 @@ int main()
 
         Renderer renderer;
 
+        ImGui::CreateContext();
+        ImGui::StyleColorsDark();
+        ImGui_ImplGlfw_InitForOpenGL(window, true);
+        ImGui_ImplOpenGL3_Init("#version 130");
+
+        glm::vec3 model_translation(200, 200, 0);
+        glm::vec3 view_translation(0, 0, 0);
+
         /* Loop until the user closes the window */
         while (!glfwWindowShouldClose(window)) {
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+
             renderer.Clear();
 
             // Início da configuração da geometria que será desenhada nesse frame. todos os binds são aplicados ao draw call atual
 
+            glm::mat4 current_model_pos = glm::translate(initial_model_pos, model_translation);
+            glm::mat4 current_view_pos = glm::translate(initial_view_pos, -view_translation);
+            glm::mat4 mvp = proj * current_view_pos * current_model_pos;
+
             shader.Bind();
             shader.SetUniform4f("u_Color", UpdateColor(), 0.3f, 0.8f, 1.0f);
+            shader.SetUniformMat4f("u_MVP", mvp);
 
             renderer.Draw(va, ib, shader);
 
-            // Fim
+            {
+
+                ImGui::SliderFloat3("Model Translation", &model_translation.x, 0.0f, 1080.0f);
+                ImGui::SliderFloat3("View Translation", &view_translation.x, 0.0f, 1080.0f);
+                ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            }
+
+            ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
             /* Swap front and back buffers */
             glfwSwapBuffers(window);
-
             /* Poll for and process events */
             glfwPollEvents();
         }
     }
 
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
+    glfwDestroyWindow(window);
     glfwTerminate();
     return 0;
 }
