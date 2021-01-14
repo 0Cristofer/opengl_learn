@@ -3,8 +3,8 @@ project(opengl_testable)
 
 find_package(OpenGL REQUIRED)
 
-set(SOURCE_FILES src/main.cpp src/Renderer.cpp src/Renderer.hpp src/VertexBuffer.cpp src/VertexBuffer.hpp src/IndexBuffer.cpp src/IndexBuffer.hpp src/VertexArray.cpp src/VertexArray.hpp src/VertexBufferLayout.hpp src/Shader.cpp src/Shader.hpp src/vendor/stb_image/stb_image.hpp src/vendor/stb_image/stb_image.cpp src/Texture.cpp src/Texture.hpp src/tests/Test.hpp src/tests/TestClearColor.cpp src/tests/TestClearColor.hpp)
 set(IMGUI_SOURCES src/vendor/imgui/imgui.cpp src/vendor/imgui/imgui_demo.cpp src/vendor/imgui/imgui_draw.cpp src/vendor/imgui/imgui_impl_glfw.cpp src/vendor/imgui/imgui_impl_opengl3.cpp src/vendor/imgui/imgui_widgets.cpp)
+set(SOURCE_FILES src/main.cpp src/Renderer.cpp src/Renderer.hpp src/VertexBuffer.cpp src/VertexBuffer.hpp src/IndexBuffer.cpp src/IndexBuffer.hpp src/VertexArray.cpp src/VertexArray.hpp src/VertexBufferLayout.hpp src/Shader.cpp src/Shader.hpp src/vendor/stb_image/stb_image.hpp src/vendor/stb_image/stb_image.cpp src/Texture.cpp src/Texture.hpp src/tests/Test.hpp src/tests/TestClearColor.cpp src/tests/TestClearColor.hpp src/tests/Test.cpp)
 
 add_executable(opengl_testable ${SOURCE_FILES} ${IMGUI_SOURCES})
 

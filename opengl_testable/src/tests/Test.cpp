@@ -1,0 +1,23 @@
+//
+// Created by crist on 14/01/2021.
+//
+
+#include "Test.hpp"
+#include "../vendor/imgui/imgui.h"
+
+namespace Test
+{
+    TestMenu::TestMenu(Test *&currentTestPointer)
+        : m_CurrentTest(currentTestPointer)
+    {
+    }
+
+    void TestMenu::OnImGuiRender()
+    {
+        for (auto& test : m_Tests)
+        {
+            if (ImGui::Button(test.first.c_str()))
+                m_CurrentTest = test.second();
+        }
+    }
+}
