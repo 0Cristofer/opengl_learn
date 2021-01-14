@@ -210,7 +210,7 @@ int main()
     GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo));
     GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW));
 
-    ShaderProgramSource src = ParseShader("../../../opengl_basic/res/shaders/basic.shader"); // caminho começa no .exe dentro de build/bin
+    ShaderProgramSource src = ParseShader("../../../res/shaders/basic.shader"); // caminho começa no .exe dentro de build/bin
     unsigned int shader = CreateShader(src.VertexSource, src.FragmentSource);
     GLCall(glUseProgram(shader));
 

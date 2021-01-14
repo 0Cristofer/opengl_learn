@@ -95,11 +95,11 @@ int main()
         glm::mat4 initial_model_pos = glm::mat4(1.0f);
         glm::mat4 initial_model2_pos = glm::mat4(1.0f);
 
-        Shader shader("../../../opengl_basic/res/shaders/basic.shader");
+        Shader shader("../../../res/shaders/abst.shader");
         shader.Bind();
         shader.SetUniform4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
 
-        Texture texture("../../../opengl_basic/res/textures/brick.png");
+        Texture texture("../../../res/textures/brick.png");
         texture.Bind();
         shader.SetUniform1i("u_Texture", 0);
 
