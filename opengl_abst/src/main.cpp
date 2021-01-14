@@ -93,6 +93,7 @@ int main()
         glm::mat4 proj = glm::ortho(0.0f, 1080.0f, 0.0f, 720.0f, -1.0f, 1.0f);
         glm::mat4 initial_view_pos = glm::mat4(1.0f);
         glm::mat4 initial_model_pos = glm::mat4(1.0f);
+        glm::mat4 initial_model2_pos = glm::mat4(1.0f);
 
         Shader shader("../../../opengl_basic/res/shaders/basic.shader");
         shader.Bind();
@@ -116,6 +117,7 @@ int main()
         ImGui_ImplOpenGL3_Init("#version 130");
 
         glm::vec3 model_translation(200, 200, 0);
+        glm::vec3 model2_translation(100, 100, 0);
         glm::vec3 view_translation(0, 0, 0);
 
         /* Loop until the user closes the window */
@@ -128,19 +130,27 @@ int main()
 
             // Início da configuração da geometria que será desenhada nesse frame. todos os binds são aplicados ao draw call atual
 
-            glm::mat4 current_model_pos = glm::translate(initial_model_pos, model_translation);
             glm::mat4 current_view_pos = glm::translate(initial_view_pos, -view_translation);
+
+            glm::mat4 current_model_pos = glm::translate(initial_model_pos, model_translation);
+            glm::mat4 current_model2_pos = glm::translate(initial_model2_pos, model2_translation);
+
             glm::mat4 mvp = proj * current_view_pos * current_model_pos;
+            glm::mat4 mvp2 = proj * current_view_pos * current_model2_pos;
 
             shader.Bind();
             shader.SetUniform4f("u_Color", UpdateColor(), 0.3f, 0.8f, 1.0f);
-            shader.SetUniformMat4f("u_MVP", mvp);
 
+            shader.SetUniformMat4f("u_MVP", mvp);
+            renderer.Draw(va, ib, shader);
+
+            shader.SetUniformMat4f("u_MVP", mvp2);
             renderer.Draw(va, ib, shader);
 
             {
 
                 ImGui::SliderFloat3("Model Translation", &model_translation.x, 0.0f, 1080.0f);
+                ImGui::SliderFloat3("Model2 Translation", &model2_translation.x, 0.0f, 1080.0f);
                 ImGui::SliderFloat3("View Translation", &view_translation.x, 0.0f, 1080.0f);
                 ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             }
