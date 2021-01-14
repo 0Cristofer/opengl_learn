@@ -16,6 +16,8 @@
 #include "VertexBufferLayout.hpp"
 #include "Texture.hpp"
 
+#include "tests/TestClearColor.hpp"
+
 float UpdateColor()
 {
     static float r = 0.0f;
@@ -120,15 +122,13 @@ int main()
         glm::vec3 model2_translation(100, 100, 0);
         glm::vec3 view_translation(0, 0, 0);
 
-        /* Loop until the user closes the window */
-        while (!glfwWindowShouldClose(window)) {
-            ImGui_ImplOpenGL3_NewFrame();
-            ImGui_ImplGlfw_NewFrame();
-            ImGui::NewFrame();
+        Test::TestClearColor test;
 
+        while (!glfwWindowShouldClose(window)) {
             renderer.Clear();
 
-            // Início da configuração da geometria que será desenhada nesse frame. todos os binds são aplicados ao draw call atual
+            test.OnUpdate(0.0f);
+            test.OnRender();
 
             glm::mat4 current_view_pos = glm::translate(initial_view_pos, -view_translation);
 
@@ -147,20 +147,20 @@ int main()
             shader.SetUniformMat4f("u_MVP", mvp2);
             renderer.Draw(va, ib, shader);
 
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
             {
-
                 ImGui::SliderFloat3("Model Translation", &model_translation.x, 0.0f, 1080.0f);
                 ImGui::SliderFloat3("Model2 Translation", &model2_translation.x, 0.0f, 1080.0f);
                 ImGui::SliderFloat3("View Translation", &view_translation.x, 0.0f, 1080.0f);
                 ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+                test.OnImGuiRender();
             }
-
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-            /* Swap front and back buffers */
             glfwSwapBuffers(window);
-            /* Poll for and process events */
             glfwPollEvents();
         }
     }
