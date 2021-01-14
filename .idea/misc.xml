@@ -5,6 +5,7 @@
     <sourceRoots>
       <file path="$PROJECT_DIR$/opengl_abst/src" />
       <file path="$PROJECT_DIR$/opengl_basic/src" />
+      <file path="$PROJECT_DIR$/opengl_testable/src" />
     </sourceRoots>
     <excludeRoots>
       <file path="$PROJECT_DIR$/build" />
