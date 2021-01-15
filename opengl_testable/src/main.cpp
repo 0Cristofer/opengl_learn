@@ -17,27 +17,12 @@
 #include "Texture.hpp"
 
 #include "tests/TestClearColor.hpp"
-
-float UpdateColor()
-{
-    static float r = 0.0f;
-    static float increment = 0.05;
-
-    if (r > 1.0f)
-        increment = -0.05f;
-    else if (r < 0.0f)
-        increment = 0.05;
-
-    r += increment;
-
-    return r;
-}
+#include "tests/TestTexture2D.hpp"
 
 int main()
 {
     GLFWwindow* window;
 
-    /* Initialize the library */
     if (!glfwInit()) {
         return -1;
     }
@@ -46,7 +31,6 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    /* Create a windowed mode window and its OpenGL context */
     window = glfwCreateWindow(1080, 720, "Hello World", nullptr, nullptr);
     if (!window)
     {
@@ -54,17 +38,13 @@ int main()
         return -1;
     }
 
-    /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
     // Ativa VSync
     glfwSwapInterval(1);
 
-    if (glewInit() != GLEW_OK) // Glew init precisa ser chamado depois de criar o contexto
+    if (glewInit() != GLEW_OK)
         return -1;
-
-    GLCall(glEnable(GL_BLEND));
-    GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
     std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
 
@@ -77,10 +57,11 @@ int main()
         ImGui_ImplOpenGL3_Init("#version 130");
 
         Test::Test* currentTest;
-        Test::TestMenu* testMenu = new Test::TestMenu(currentTest);
+        auto* testMenu = new Test::TestMenu(currentTest);
         currentTest = testMenu;
 
         testMenu->RegisterTest<Test::TestClearColor>("Clear Color");
+        testMenu->RegisterTest<Test::TestTexture2D>("2D Texture");
 
         while (!glfwWindowShouldClose(window)) {
             GLCall(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
